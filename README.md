@@ -8,6 +8,20 @@ Inspired by [Claude-to-IM](https://github.com/op7418/Claude-to-IM), this project
 
 ---
 
+### 📣 Quick Share (For Social Media)
+
+> Ever wanted to turn Google Gemini into a personal AI assistant that can *actually* control your computer?
+> 
+> I've open-sourced **gemini-to-im**, a tool that connects Gemini to your Telegram and gives it superpowers. You can ask it to find available parking spots in Taipei, check the surf conditions in Kenting, or even run custom scripts on your machine—all from your phone.
+>
+> It's free, open-source, and all your conversation data stays on your own hardware for maximum privacy. Build your own super-powered AI assistant today!
+> 
+> **GitHub Link**: `https://github.com/Harperbot/gemini-to-im`
+>
+> `#Gemini #AIassistant #OpenSource #TelegramBot #DIY`
+
+---
+
 ## 🆚 Gemini App vs. Gemini-to-IM: What's the Difference?
 
 Think of the official Gemini App on your phone as a **premium taxi service** — powerful, convenient, but limited to what the driver (Google) can do. Your **`gemini-to-im`** is like **your personal, customizable car** parked in your garage.
