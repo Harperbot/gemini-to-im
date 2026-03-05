@@ -15,6 +15,17 @@ Inspired by [Claude-to-IM](https://github.com/op7418/Claude-to-IM), this project
 - **Standalone & Lightweight**: No bulky agent frameworks required. It relies purely on Node.js, the official `@google/generative-ai` SDK, and the Telegram Bot API.
 - **Rate Limit Handling**: Built-in throttler (debounce/throttle) prevents hitting Telegram's strict message editing rate limits during fast streaming.
 
+---
+
+## 💡 Why this project?
+
+Existing bots are often bloated with databases and complex setups. **Gemini-to-IM** focuses on simplicity:
+- **Purely Standalone**: No databases, no complicated frameworks. Just one `index.js` and you're good to go.
+- **Deep Gemini Integration**: Specifically tuned for Google's Generative AI SDK, ensuring smooth streaming and reliable Function Calling.
+- **Developer-Friendly**: A perfect boilerplate for developers looking to understand how to bridge LLM tools with mobile apps via Telegram.
+
+---
+
 ## 🚀 Installation
 
 ### 1. Clone the repository

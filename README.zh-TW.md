@@ -15,6 +15,17 @@
 - **獨立且輕量化**：不需要安裝龐大的 Agent 框架。純粹使用 Node.js、官方的 `@google/generative-ai` SDK 與 Telegram Bot API 寫成。
 - **速率限制處理**：內建的節流函式（Throttle/Debounce）可防止在快速串流文字時，觸發 Telegram 嚴格的 API 速率限制（Rate Limits）。
 
+---
+
+## 💡 為什麼選擇此專案？
+
+現有的機器人通常過於臃腫且設定複雜，**Gemini-to-IM** 專注於極致的簡約：
+- **完全獨立運作**：不需資料庫、不需複雜框架。只有一個 `index.js`，讓您在幾分鐘內完成部署。
+- **針對 Gemini 深度優化**：專為 Google 的 Generative AI SDK 調校，確保在 Telegram 上能流暢顯示串流文字並穩定調用工具。
+- **開發者友善**：這是一個絕佳的範本，適合想要學習如何透過通訊軟體遠端調用 LLM 工具的開發者。
+
+---
+
 ## 🚀 安裝指南
 
 ### 1. 複製專案
