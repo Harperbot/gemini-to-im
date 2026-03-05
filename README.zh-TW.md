@@ -53,9 +53,30 @@
 - **交通部 TDX 平台**: 在 [tdx.transportdata.tw](https://tdx.transportdata.tw/) 註冊，以取得用於**停車場查詢**的 `Client ID` 與 `Secret`。
 - **氣象署開放資料平台**: 在 [opendata.cwa.gov.tw](https://opendata.cwa.gov.tw/) 註冊，以取得用於**衝浪浪況**的 `API Key`。
 
+## 🚀 新手友善啟動指南 (一步步教學)
+
+如果您從未寫過程式或使用過終端機，請按照以下步驟操作：
+
+### 第一步：準備環境
+- **安裝 Node.js**：前往 [nodejs.org](https://nodejs.org/) 下載並安裝「LTS 穩定版」。
+- **安裝 Python**：前往 [python.org](https://www.python.org/) 下載並安裝（如果您要使用找車位或衝浪功能才需要）。
+
+### 第二步：取得免費金鑰
+1. **Gemini 金鑰**：登入 [Google AI Studio](https://aistudio.google.com/app/apikey) 點擊 "Create API key"。
+2. **Telegram 機器人**：在 Telegram 搜尋 `@BotFather`，輸入 `/newbot` 照著指示設定，最後會拿到一串 **HTTP API Token**。
+3. **您的使用者 ID**：在 Telegram 搜尋 `@userinfobot` 並傳訊息給它，它會回傳您的 **ID** (一串數字)，這就是白名單要用的。
+
+### 第三步：設定與執行
+1. 下載本專案的 ZIP 檔並解壓縮（或使用 `git clone`）。
+2. 開啟您的終端機 (Windows 搜尋 `cmd`，Mac 搜尋 `終端機`)。
+3. 輸入 `cd `（後面有一個空格），然後將您解壓縮後的資料夾**直接拖進**終端機視窗，按下 Enter。
+4. 輸入指令 `npm install` 並按下 Enter。
+5. 在資料夾中建立一個名為 `.env` 的檔案（可以複製 `.env.example` 來改），把您的金鑰貼進去。
+6. 最後輸入 `node index.js` 即可啟動！
+
 ---
 
-## 🚀 安裝指南
+## 🚀 進階安裝指南 (開發者適用)
 
 ### 1. 複製專案
 ```bash

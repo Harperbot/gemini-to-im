@@ -53,9 +53,29 @@ To use this bridge, you will need the following accounts and API keys:
 - **TDX (Transport Data eXchange)**: Register at [tdx.transportdata.tw](https://tdx.transportdata.tw/) to get your `Client ID` and `Secret` for **Parking Queries**.
 - **CWA Open Data**: Register at [opendata.cwa.gov.tw](https://opendata.cwa.gov.tw/) to get your `API Key` for **Surf Spot Weather**.
 
+## 🚀 Getting Started (Step-by-Step for Beginners)
+
+If you have never used a CLI or programmed before, follow these steps:
+
+### 1. Prepare your environment
+- **Install Node.js**: Download and install the "LTS" version from [nodejs.org](https://nodejs.org/).
+- **Install Python**: Download and install from [python.org](https://www.python.org/). (Required only if you use Taiwan tools).
+
+### 2. Get your Keys (It's Free!)
+- **Gemini Key**: Go to [Google AI Studio](https://aistudio.google.com/app/apikey) and click "Create API key".
+- **Telegram Token**: Search for `@BotFather` in Telegram, send `/newbot`, and follow instructions to get your **HTTP API Token**.
+- **Your Chat ID**: Search for `@userinfobot` in Telegram and send it a message to get your personal **ID** (a numbers string).
+
+### 3. Setup the Project
+1. Download this project as a ZIP and unzip it (or use `git clone`).
+2. Open your terminal (Command Prompt on Windows, Terminal on Mac).
+3. Type `cd ` (with a space) and drag your project folder into the terminal window, then hit Enter.
+4. Run: `npm install`
+5. Create a file named `.env` in the folder (see `.env.example` for format) and paste your keys.
+
 ---
 
-## 🚀 Installation
+## 🚀 Installation (Advanced Users)
 
 ### 1. Clone the repository
 ```bash
