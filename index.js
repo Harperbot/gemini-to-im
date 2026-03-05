@@ -8,6 +8,7 @@ const { exec } = require('child_process');
 // 初始化環境變數
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const ALLOWED_USER_IDS = process.env.ALLOWED_USER_IDS ? process.env.ALLOWED_USER_IDS.split(',').map(id => id.trim()) : [];
 
 if (!TELEGRAM_BOT_TOKEN || !GEMINI_API_KEY) {
   console.error("請在 .env 中設定 TELEGRAM_BOT_TOKEN 與 GEMINI_API_KEY");
@@ -22,6 +23,54 @@ const SESSION_FILE = path.join(__dirname, 'sessions.json');
 
 // 儲存每個聊天會話的歷史紀錄與狀態
 const sessions = new Map();
+
+// 處理訊息切分、格式降級與發送 (改進點 2 & 4)
+async function sendSmartMessage(chatId, text, options = {}) {
+  const MAX_LENGTH = 4000;
+  
+  // 內部發送函式，具備 Markdown 失敗降級邏輯
+  const attemptSend = async (content, msgId) => {
+    try {
+      if (msgId) {
+        return await bot.editMessageText(content, { chat_id: chatId, message_id: msgId, parse_mode: 'Markdown', ...options });
+      } else {
+        return await bot.sendMessage(chatId, content, { parse_mode: 'Markdown', ...options });
+      }
+    } catch (err) {
+      if (err.message.includes('message is not modified')) return;
+      // 如果 Markdown 解析失敗，降級為純文字
+      if (err.message.includes('can\'t parse entities') || err.message.includes('bad request')) {
+        if (msgId) {
+          return await bot.editMessageText(content, { chat_id: chatId, message_id: msgId, ...options });
+        } else {
+          return await bot.sendMessage(chatId, content, options);
+        }
+      }
+      throw err;
+    }
+  };
+
+  if (text.length <= MAX_LENGTH) {
+    return await attemptSend(text, options.message_id);
+  }
+
+  // 處理長訊息切分
+  const chunks = [];
+  for (let i = 0; i < text.length; i += MAX_LENGTH) {
+    chunks.push(text.substring(i, i + MAX_LENGTH));
+  }
+
+  if (options.message_id) {
+    await attemptSend(chunks[0], options.message_id);
+    for (let i = 1; i < chunks.length; i++) {
+      await attemptSend(chunks[i]);
+    }
+  } else {
+    for (const chunk of chunks) {
+      await attemptSend(chunk);
+    }
+  }
+}
 
 // 載入持久化記憶
 function loadSessions() {
@@ -138,8 +187,14 @@ bot.on('message', async (msg) => {
   const text = msg.text;
   if (!text) return;
 
+  // 安全白名單檢查 (改進點 1)
+  if (ALLOWED_USER_IDS.length > 0 && !ALLOWED_USER_IDS.includes(chatId.toString())) {
+    console.warn(`拒絕未經授權的使用者: ${chatId}`);
+    return bot.sendMessage(chatId, "❌ 您未獲授權使用此機器人。");
+  }
+
   if (text === '/start') {
-    return bot.sendMessage(chatId, "您好！我是您的獨立版 Gemini，支援打字機效果與互動按鈕。");
+    return bot.sendMessage(chatId, "您好！我是您的獨立版 Gemini，支援持久化記憶、在地化工具與長訊息自動處理。");
   }
 
   // 初始化或獲取會話
@@ -157,23 +212,18 @@ bot.on('message', async (msg) => {
   session.isProcessing = true;
 
   try {
-    // 傳送一個空的「打字中...」訊息，之後我們會不斷編輯它
+    // 傳送一個空的「打字中...」訊息
     let replyMsg = await bot.sendMessage(chatId, "⏳ 思考中...");
     let fullText = "";
 
-    // 呼叫 Gemini 的串流生成 (Streaming)
+    // 呼叫 Gemini 的串流生成
     const result = await session.chat.sendMessageStream(text);
 
-    // 實作節流更新器 (每 500ms 更新一次 Telegram 訊息)
+    // 節流更新器
     const updateTelegramMessage = throttle(async (newText) => {
       if (newText.trim() === "") return;
-      try {
-        await bot.editMessageText(newText, { chat_id: chatId, message_id: replyMsg.message_id });
-      } catch (err) {
-        // 忽略 Telegram 訊息內容未改變時的報錯
-        if (!err.message.includes('message is not modified')) console.error("Edit error:", err.message);
-      }
-    }, 500);
+      await sendSmartMessage(chatId, newText, { message_id: replyMsg.message_id });
+    }, 1000); 
 
     // 處理串流結果
     for await (const chunk of result.stream) {
@@ -246,10 +296,8 @@ bot.on('message', async (msg) => {
 
               const updateMsg = throttle(async (newText) => {
                 if (newText.trim() === "") return;
-                try {
-                  await bot.editMessageText(newText, { chat_id: chatId, message_id: nextReplyMsg.message_id });
-                } catch (err) {}
-              }, 500);
+                await sendSmartMessage(chatId, newText, { message_id: nextReplyMsg.message_id });
+              }, 1000);
 
               for await (const chunk2 of result2.stream) {
                 if (chunk2.text) {
@@ -326,12 +374,8 @@ bot.on('callback_query', async (callbackQuery) => {
 
     const updateTelegramMessage = throttle(async (newText) => {
       if (newText.trim() === "") return;
-      try {
-        await bot.editMessageText(newText, { chat_id: chatId, message_id: replyMsg.message_id });
-      } catch (err) {
-        if (!err.message.includes('message is not modified')) console.error("Edit error:", err.message);
-      }
-    }, 500);
+      await sendSmartMessage(chatId, newText, { message_id: replyMsg.message_id });
+    }, 1000);
 
     for await (const chunk of result.stream) {
       if (chunk.text) {

@@ -14,6 +14,8 @@ Inspired by [Claude-to-IM](https://github.com/op7418/Claude-to-IM), this project
 - **Interactive Tool Approvals**: When Gemini decides to use a registered "dangerous" tool (e.g., executing a local shell command), it pauses execution and sends an inline keyboard with `[✅ Allow]` and `[❌ Reject]` buttons to your chat.
 - **Standalone & Lightweight**: No bulky agent frameworks required. It relies purely on Node.js, the official `@google/generative-ai` SDK, and the Telegram Bot API.
 - **Persistent Memory**: Automatically saves your conversation history to `sessions.json`. Even if the server restarts, Gemini remembers who you are and what you talked about.
+- **Security Whitelisting**: Restrict access to specific users via `ALLOWED_USER_IDS` to protect your API quota and system.
+- **Auto-Chunking & Fallback**: Automatically splits long responses (>4000 chars) into multiple messages and falls back to plain text if Markdown parsing fails, ensuring reliable delivery.
 - **Built-in Localized Tools**: Comes pre-packaged with powerful tools (currently tailored for Taiwan, set via `LOCALIZATION=TW` in `.env`):
   - 🅿️ **Real-time Parking Query**: Instantly finds available parking spots near a location or Google Maps link.
   - 🏄 **Surf Spot Weather**: Gets real-time tides, wind conditions, and typhoon updates for Taiwan surf spots.
