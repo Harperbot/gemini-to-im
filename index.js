@@ -15,7 +15,9 @@ if (!TELEGRAM_BOT_TOKEN || !GEMINI_API_KEY) {
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-// 註冊一個我們預定要 Gemini 使用的「危險」工具
+const { exec } = require('child_process');
+
+// 註冊我們預定要 Gemini 使用的工具
 const tools = [
   {
     functionDeclarations: [
@@ -33,6 +35,28 @@ const tools = [
           required: ["command"],
         },
       },
+      {
+        name: "find_parking",
+        description: "尋找台灣附近有空位的停車場，並提供導航連結。支援給定經緯度或地點名稱。",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            lat: { type: "NUMBER", description: "緯度" },
+            lon: { type: "NUMBER", description: "經度" },
+            location_name: { type: "STRING", description: "地點名稱，若無經緯度可透過此名稱搜尋" }
+          }
+        }
+      },
+      {
+        name: "query_surf_spots",
+        description: "查詢台灣各地的衝浪浪點資訊。即時顯示潮汐、風況與一鍵導航。",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            query: { type: "STRING", description: "浪點名稱 (如: 東河) 或地區 (如: 宜蘭, east)" }
+          }
+        }
+      }
     ],
   },
 ];
@@ -112,9 +136,11 @@ bot.on('message', async (msg) => {
         updateTelegramMessage(fullText);
       }
       
-      // 處理函數呼叫 (Tool Call) -> 也就是需要您核准的危險操作
+      // 處理函數呼叫 (Tool Call)
       if (chunk.functionCalls && chunk.functionCalls.length > 0) {
         const call = chunk.functionCalls[0];
+        
+        // 1. 需要授權的工具
         if (call.name === "run_shell_command") {
           const commandArgs = call.args.command;
           
@@ -134,10 +160,68 @@ bot.on('message', async (msg) => {
             }
           });
           
-          // 儲存待處理的 Tool Call，讓 Callback Query 能將結果送回 Gemini
           session.pendingFunctionCall = call;
-          session.isProcessing = false; // 暫停，等待使用者按按鈕
+          session.isProcessing = false;
           return; 
+        }
+        
+        // 2. 自動執行的無害工具 (找車位 & 衝浪)
+        if (call.name === "find_parking" || call.name === "query_surf_spots") {
+          await bot.editMessageText(fullText + `\n\n🔍 *正在查詢資料，請稍候...*`, { chat_id: chatId, message_id: replyMsg.message_id, parse_mode: "Markdown" });
+          
+          let execCmd = "";
+          if (call.name === "find_parking") {
+            const lat = call.args.lat;
+            const lon = call.args.lon;
+            const loc = call.args.location_name;
+            if (lat && lon) {
+              execCmd = `python3 ~/.openclaw/skills/parking_query/parking_query.py --lat ${lat} --lon ${lon}`;
+            } else if (loc) {
+               // 如果只有給地點名稱，嘗試讓他用 google map 格式搜或直接請它重問
+               // 為求簡化，若沒給座標，我們請 Python 腳本報錯，讓 Gemini 引導使用者
+               execCmd = `python3 ~/.openclaw/skills/parking_query/parking_query.py --url "?q=${encodeURIComponent(loc)}"`;
+            }
+          } else if (call.name === "query_surf_spots") {
+            const query = call.args.query || "all";
+            execCmd = `python3 ~/.openclaw/skills/surf_query/surf_query.py --query "${query}"`;
+          }
+
+          // 執行 Python 腳本
+          exec(execCmd, async (error, stdout, stderr) => {
+            const output = stdout || stderr || error.message;
+            try {
+              let nextReplyMsg = await bot.sendMessage(chatId, "⏳ 分析查詢結果中...");
+              let nextFullText = "";
+              
+              const result2 = await session.chat.sendMessageStream([{
+                functionResponse: {
+                  name: call.name,
+                  response: { result: output }
+                }
+              }]);
+
+              const updateMsg = throttle(async (newText) => {
+                if (newText.trim() === "") return;
+                try {
+                  await bot.editMessageText(newText, { chat_id: chatId, message_id: nextReplyMsg.message_id });
+                } catch (err) {}
+              }, 500);
+
+              for await (const chunk2 of result2.stream) {
+                if (chunk2.text) {
+                  nextFullText += chunk2.text();
+                  updateMsg(nextFullText);
+                }
+              }
+              setTimeout(() => updateMsg(nextFullText), 600);
+            } catch (e) {
+              bot.sendMessage(chatId, "❌ 分析時發生錯誤：" + e.message);
+            } finally {
+              session.isProcessing = false;
+            }
+          });
+          
+          return; // 結束這個處理迴圈，等待 exec 的 callback
         }
       }
     }
