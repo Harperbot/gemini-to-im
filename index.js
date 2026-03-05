@@ -175,15 +175,13 @@ bot.on('message', async (msg) => {
             const lon = call.args.lon;
             const loc = call.args.location_name;
             if (lat && lon) {
-              execCmd = `python3 ~/.openclaw/skills/parking_query/parking_query.py --lat ${lat} --lon ${lon}`;
+              execCmd = `python3 ./tools/parking_query.py --lat ${lat} --lon ${lon}`;
             } else if (loc) {
-               // 如果只有給地點名稱，嘗試讓他用 google map 格式搜或直接請它重問
-               // 為求簡化，若沒給座標，我們請 Python 腳本報錯，讓 Gemini 引導使用者
-               execCmd = `python3 ~/.openclaw/skills/parking_query/parking_query.py --url "?q=${encodeURIComponent(loc)}"`;
+               execCmd = `python3 ./tools/parking_query.py --url "?q=${encodeURIComponent(loc)}"`;
             }
           } else if (call.name === "query_surf_spots") {
             const query = call.args.query || "all";
-            execCmd = `python3 ~/.openclaw/skills/surf_query/surf_query.py --query "${query}"`;
+            execCmd = `python3 ./tools/surf_query.py --query "${query}"`;
           }
 
           // 執行 Python 腳本
