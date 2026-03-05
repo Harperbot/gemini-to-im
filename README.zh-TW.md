@@ -28,6 +28,18 @@
 - **針對 Gemini 深度優化**：專為 Google 的 Generative AI SDK 調校，確保在 Telegram 上能流暢顯示串流文字並穩定調用工具。
 - **開發者友善**：這是一個絕佳的範本，適合想要學習如何透過通訊軟體遠端調用 LLM 工具的開發者。
 
+## 🔑 帳號與金鑰需求
+
+要啟動此橋接器，您需要申請以下帳號與 API 金鑰：
+
+### 必要項目 (核心 AI 功能)
+1. **Google AI Studio**: 取得 [Gemini API Key](https://aistudio.google.com/app/apikey)（有免費額度可使用）。
+2. **Telegram**: 向 [@BotFather](https://t.me/botfather) 申請建立新機器人，並取得 **Telegram Bot Token**。
+
+### 選用項目 (台灣在地化工具)
+- **交通部 TDX 平台**: 在 [tdx.transportdata.tw](https://tdx.transportdata.tw/) 註冊，以取得用於**停車場查詢**的 `Client ID` 與 `Secret`。
+- **氣象署開放資料平台**: 在 [opendata.cwa.gov.tw](https://opendata.cwa.gov.tw/) 註冊，以取得用於**衝浪浪況**的 `API Key`。
+
 ---
 
 ## 🚀 安裝指南

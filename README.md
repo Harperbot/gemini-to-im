@@ -28,6 +28,18 @@ Existing bots are often bloated with databases and complex setups. **Gemini-to-I
 - **Deep Gemini Integration**: Specifically tuned for Google's Generative AI SDK, ensuring smooth streaming and reliable Function Calling.
 - **Developer-Friendly**: A perfect boilerplate for developers looking to understand how to bridge LLM tools with mobile apps via Telegram.
 
+## 🔑 Account Requirements
+
+To use this bridge, you will need the following accounts and API keys:
+
+### Mandatory (Core AI Features)
+1. **Google AI Studio**: Obtain your [Gemini API Key](https://aistudio.google.com/app/apikey). (Free tier available)
+2. **Telegram**: Message [@BotFather](https://t.me/botfather) to create a new bot and get your **Telegram Bot Token**.
+
+### Optional (For Taiwan Localized Tools)
+- **TDX (Transport Data eXchange)**: Register at [tdx.transportdata.tw](https://tdx.transportdata.tw/) to get your `Client ID` and `Secret` for **Parking Queries**.
+- **CWA Open Data**: Register at [opendata.cwa.gov.tw](https://opendata.cwa.gov.tw/) to get your `API Key` for **Surf Spot Weather**.
+
 ---
 
 ## 🚀 Installation
