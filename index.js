@@ -1,6 +1,9 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
 
 // 初始化環境變數
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -15,7 +18,45 @@ if (!TELEGRAM_BOT_TOKEN || !GEMINI_API_KEY) {
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-const { exec } = require('child_process');
+const SESSION_FILE = path.join(__dirname, 'sessions.json');
+
+// 儲存每個聊天會話的歷史紀錄與狀態
+const sessions = new Map();
+
+// 載入持久化記憶
+function loadSessions() {
+  if (fs.existsSync(SESSION_FILE)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf8'));
+      for (const [chatId, history] of Object.entries(data)) {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", tools: tools });
+        const chat = model.startChat({ history: history });
+        sessions.set(Number(chatId), { chat, isProcessing: false });
+      }
+      console.log(`✅ 已載入 ${Object.keys(data).length} 個對話記憶。`);
+    } catch (e) {
+      console.error("載入對話記憶失敗:", e);
+    }
+  }
+}
+
+// 儲存持久化記憶
+async function saveSessions() {
+  const dataToSave = {};
+  for (const [chatId, session] of sessions.entries()) {
+    try {
+      // 獲取歷史紀錄並過濾掉可能導致序列化失敗的屬性
+      const history = await session.chat.getHistory();
+      dataToSave[chatId] = history.map(msg => ({
+        role: msg.role,
+        parts: msg.parts
+      }));
+    } catch (e) {
+      console.error(`獲取 ${chatId} 歷史紀錄失敗:`, e);
+    }
+  }
+  fs.writeFileSync(SESSION_FILE, JSON.stringify(dataToSave, null, 2), 'utf8');
+}
 
 // 註冊我們預定要 Gemini 使用的工具
 const tools = [
@@ -60,9 +101,6 @@ const tools = [
     ],
   },
 ];
-
-// 儲存每個聊天會話的歷史紀錄與狀態
-const sessions = new Map();
 
 // 節流函式：避免更新 Telegram 訊息過快導致 Rate Limit
 function throttle(func, limit) {
@@ -235,6 +273,8 @@ bot.on('message', async (msg) => {
     if (session && !session.pendingFunctionCall) {
       session.isProcessing = false;
     }
+    // 每次對話結束後儲存記憶
+    saveSessions();
   }
 });
 
@@ -297,7 +337,12 @@ bot.on('callback_query', async (callbackQuery) => {
   } finally {
     session.pendingFunctionCall = null;
     session.isProcessing = false;
+    // 每次對話結束後儲存記憶
+    saveSessions();
   }
 });
+
+// 啟動時載入記憶
+loadSessions();
 
 console.log("獨立版 Gemini-to-IM 已啟動！請在 Telegram 中發送訊息給您的機器人。");
