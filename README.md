@@ -8,6 +8,21 @@ Inspired by [Claude-to-IM](https://github.com/op7418/Claude-to-IM), this project
 
 ---
 
+## 🆚 Gemini App vs. Gemini-to-IM: What's the Difference?
+
+Think of the official Gemini App on your phone as a **premium taxi service** — powerful, convenient, but limited to what the driver (Google) can do. Your **`gemini-to-im`** is like **your personal, customizable car** parked in your garage.
+
+| Feature          | 📱 Official Gemini App                      | 💻 Your `gemini-to-im`                       |
+| :--------------- | :---------------------------------------- | :------------------------------------------- |
+| **Core AI**      | Runs on Google's cloud servers.           | **Runs on your computer**, connects to Google's cloud AI. |
+| **Superpowers**  | Integrates with Google services (Gmail, Docs). | **Controls your computer!** Can:<br>• **Find parking** (runs Python scripts on your machine)<br>• **Check surf forecasts** (runs Python scripts on your machine)<br>• **Execute any program** on your system (with your explicit approval). |
+| **Privacy & Data** | Your conversations are stored on **Google's cloud servers**. | Your conversations are stored **locally on your computer** (`sessions.json`). |
+| **Customization**| Limited to app settings.                  | **Infinitely customizable**. You (or Gemini itself!) can add new tools, modify its behavior, and tailor it to your exact needs. |
+| **Access**       | Available anywhere your phone has internet. | Accessible via Telegram wherever your **host computer is running and connected to the internet**. |
+| **Ideal for**    | General users seeking quick AI info.      | **AI enthusiasts & developers** who want a personalized AI assistant that can interact with and automate their local system. |
+
+---
+
 ## ✨ Features
 
 - **Typing Effect (Streaming)**: Streams Gemini's responses in real-time by continuously editing the IM message, providing a native "typewriter" experience without hitting API limits.
