@@ -28,6 +28,16 @@ Existing bots are often bloated with databases and complex setups. **Gemini-to-I
 - **Deep Gemini Integration**: Specifically tuned for Google's Generative AI SDK, ensuring smooth streaming and reliable Function Calling.
 - **Developer-Friendly**: A perfect boilerplate for developers looking to understand how to bridge LLM tools with mobile apps via Telegram.
 
+## 🖥️ System Requirements
+
+This bridge is designed to be extremely lightweight and can run on almost any modern system:
+
+- **OS**: Linux (Ubuntu, Debian, etc.), macOS, or Windows (via WSL2 recommended).
+- **Environment**: 
+  - **Node.js**: v18.0.0 or higher.
+  - **Python**: v3.9 or higher (required for local tools like parking/surf query).
+- **Hardware**: Can run on low-resource devices like a **Raspberry Pi**, a home server, or even a free-tier VPS (Oracle Cloud, AWS, etc.).
+
 ## 🔑 Account Requirements
 
 To use this bridge, you will need the following accounts and API keys:
