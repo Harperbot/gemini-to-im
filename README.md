@@ -18,6 +18,7 @@ Inspired by [Claude-to-IM](https://github.com/op7418/Claude-to-IM), this project
   - 🅿️ **Real-time Parking Query**: Instantly finds available parking spots near a location or Google Maps link.
   - 🏄 **Surf Spot Weather**: Gets real-time tides, wind conditions, and typhoon updates for Taiwan surf spots.
 - **Rate Limit Handling**: Built-in throttler (debounce/throttle) prevents hitting Telegram's strict message editing rate limits during fast streaming.
+- **Modular Adapter Architecture**: The core Gemini logic is decoupled from the IM platform. You can easily plug in your own adapters for **Discord**, **LINE**, or **Slack**.
 
 ---
 
@@ -101,6 +102,16 @@ Gemini will attempt to call the `run_shell_command` tool, triggering the bot to 
 
 ## 🏗️ How to Add Real Commands
 Currently, the `run_shell_command` tool in `index.js` returns a *mocked* output for safety. If you wish to execute real system commands, you can integrate Node's `child_process.exec` inside the `callback_query` handler. **Do this at your own risk and ensure your bot is strictly private!**
+
+## 🔌 Building Your Own Adapter (Discord / LINE / Slack)
+
+The system is designed with a modular mindset. The core logic handles Gemini streaming, memory, and tools, while the "Adapter" handles receiving and sending messages.
+
+To support **LINE** or **Discord**, you don't need to rewrite the AI logic. Simply:
+1. Look at the Telegram implementation (`index.js`).
+2. Swap out `node-telegram-bot-api` for `discord.js` or `@line/bot-sdk`.
+3. Map your platform's incoming message event to the Gemini session handler.
+4. (For LINE) Since LINE does not support real-time message editing (streaming), you can accumulate the chunks and send them as a single `replyMessage` once the stream ends.
 
 ## 🤝 Contributing
 Pull requests are welcome! Feel free to add adapters for Discord, Slack, or Line.
