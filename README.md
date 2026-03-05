@@ -14,7 +14,7 @@ Inspired by [Claude-to-IM](https://github.com/op7418/Claude-to-IM), this project
 - **Interactive Tool Approvals**: When Gemini decides to use a registered "dangerous" tool (e.g., executing a local shell command), it pauses execution and sends an inline keyboard with `[✅ Allow]` and `[❌ Reject]` buttons to your chat.
 - **Standalone & Lightweight**: No bulky agent frameworks required. It relies purely on Node.js, the official `@google/generative-ai` SDK, and the Telegram Bot API.
 - **Persistent Memory**: Automatically saves your conversation history to `sessions.json`. Even if the server restarts, Gemini remembers who you are and what you talked about.
-- **Built-in Localized Tools**: Comes pre-packaged with powerful tools for users in Taiwan:
+- **Built-in Localized Tools**: Comes pre-packaged with powerful tools (currently tailored for Taiwan, set via `LOCALIZATION=TW` in `.env`):
   - 🅿️ **Real-time Parking Query**: Instantly finds available parking spots near a location or Google Maps link.
   - 🏄 **Surf Spot Weather**: Gets real-time tides, wind conditions, and typhoon updates for Taiwan surf spots.
 - **Rate Limit Handling**: Built-in throttler (debounce/throttle) prevents hitting Telegram's strict message editing rate limits during fast streaming.
@@ -76,6 +76,9 @@ Edit `.env` with your API keys:
 ```ini
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 GEMINI_API_KEY=your_google_gemini_api_key_here
+
+# Enable localized tools (Currently supports: TW)
+LOCALIZATION=TW
 ```
 
 ### 4. Run the Bridge

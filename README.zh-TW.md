@@ -14,7 +14,7 @@
 - **互動式工具授權**：當 Gemini 決定呼叫已註冊的「危險」工具（例如：執行本地終端機指令）時，程式會暫停執行，並在您的聊天視窗中彈出帶有 `[✅ 允許]` 和 `[❌ 拒絕]` 的內聯按鈕（Inline Keyboard）。
 - **獨立且輕量化**：不需要安裝龐大的 Agent 框架。純粹使用 Node.js、官方的 `@google/generative-ai` SDK 與 Telegram Bot API 寫成。
 - **持久化對話記憶**：自動將對話紀錄寫入 `sessions.json`。即使程式重新啟動，Gemini 依然能記住您的歷史對話與上下文。
-- **內建台灣在地化工具**：程式已預先整合兩個強大的 Python 腳本（完全不需 OpenClaw）：
+- **內建在地化工具**：程式已預先整合強大的 Python 腳本（目前支援台灣，透過 `.env` 設定 `LOCALIZATION=TW` 啟用）：
   - 🅿️ **即時停車查詢**：傳送定位點或 Google Maps 網址，立即找出附近空車位與導航連結。
   - 🏄 **衝浪浪況與天氣**：查詢台灣各大浪點的即時潮汐、風況與颱風動態。
 - **速率限制處理**：內建的節流函式（Throttle/Debounce）可防止在快速串流文字時，觸發 Telegram 嚴格的 API 速率限制（Rate Limits）。
@@ -76,6 +76,9 @@ cp .env.example .env
 ```ini
 TELEGRAM_BOT_TOKEN=您的_Telegram_Bot_Token
 GEMINI_API_KEY=您的_Google_Gemini_API_Key
+
+# 啟用在地化工具 (目前支援：TW)
+LOCALIZATION=TW
 ```
 
 ### 4. 啟動橋接器

@@ -58,48 +58,56 @@ async function saveSessions() {
   fs.writeFileSync(SESSION_FILE, JSON.stringify(dataToSave, null, 2), 'utf8');
 }
 
-// 註冊我們預定要 Gemini 使用的工具
-const tools = [
+// 動態載入工具模組
+const localization = process.env.LOCALIZATION || 'TW'; // 預設為台灣
+
+const baseTools = [
   {
-    functionDeclarations: [
-      {
-        name: "run_shell_command",
-        description: "在宿主機器上執行 Shell 指令（需要使用者授權）。",
-        parameters: {
-          type: "OBJECT",
-          properties: {
-            command: {
-              type: "STRING",
-              description: "要執行的 Bash 指令",
-            },
-          },
-          required: ["command"],
-        },
+    name: "run_shell_command",
+    description: "在宿主機器上執行 Shell 指令（需要使用者授權）。",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        command: { type: "STRING", description: "要執行的 Bash 指令" },
       },
-      {
-        name: "find_parking",
-        description: "尋找台灣附近有空位的停車場，並提供導航連結。支援給定經緯度或地點名稱。",
-        parameters: {
-          type: "OBJECT",
-          properties: {
-            lat: { type: "NUMBER", description: "緯度" },
-            lon: { type: "NUMBER", description: "經度" },
-            location_name: { type: "STRING", description: "地點名稱，若無經緯度可透過此名稱搜尋" }
-          }
-        }
-      },
-      {
-        name: "query_surf_spots",
-        description: "查詢台灣各地的衝浪浪點資訊。即時顯示潮汐、風況與一鍵導航。",
-        parameters: {
-          type: "OBJECT",
-          properties: {
-            query: { type: "STRING", description: "浪點名稱 (如: 東河) 或地區 (如: 宜蘭, east)" }
-          }
-        }
+      required: ["command"],
+    },
+  }
+];
+
+const taiwanTools = [
+  {
+    name: "find_parking",
+    description: "尋找台灣附近有空位的停車場，並提供導航連結。支援給定經緯度或地點名稱。",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        lat: { type: "NUMBER", description: "緯度" },
+        lon: { type: "NUMBER", description: "經度" },
+        location_name: { type: "STRING", description: "地點名稱，若無經緯度可透過此名稱搜尋" }
       }
-    ],
+    }
   },
+  {
+    name: "query_surf_spots",
+    description: "查詢台灣各地的衝浪浪點資訊。即時顯示潮汐、風況與一鍵導航。",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        query: { type: "STRING", description: "浪點名稱 (如: 東河) 或地區 (如: 宜蘭, east)" }
+      }
+    }
+  }
+];
+
+// 根據環境變數決定要載入哪些工具
+let activeToolDeclarations = [...baseTools];
+if (localization === 'TW') {
+  activeToolDeclarations = activeToolDeclarations.concat(taiwanTools);
+}
+
+const tools = [
+  { functionDeclarations: activeToolDeclarations }
 ];
 
 // 節流函式：避免更新 Telegram 訊息過快導致 Rate Limit
@@ -213,13 +221,13 @@ bot.on('message', async (msg) => {
             const lon = call.args.lon;
             const loc = call.args.location_name;
             if (lat && lon) {
-              execCmd = `python3 ./tools/parking_query.py --lat ${lat} --lon ${lon}`;
+              execCmd = `python3 ./tools/taiwan/parking_query.py --lat ${lat} --lon ${lon}`;
             } else if (loc) {
-               execCmd = `python3 ./tools/parking_query.py --url "?q=${encodeURIComponent(loc)}"`;
+               execCmd = `python3 ./tools/taiwan/parking_query.py --url "?q=${encodeURIComponent(loc)}"`;
             }
           } else if (call.name === "query_surf_spots") {
             const query = call.args.query || "all";
-            execCmd = `python3 ./tools/surf_query.py --query "${query}"`;
+            execCmd = `python3 ./tools/taiwan/surf_query.py --query "${query}"`;
           }
 
           // 執行 Python 腳本
