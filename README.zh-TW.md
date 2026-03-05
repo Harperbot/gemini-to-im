@@ -56,6 +56,35 @@
   - **Python**: v3.9 或更高版本（若要使用內建的停車/衝浪工具才需要）。
 - **硬體需求**: 資源消耗極低，可運行於 **Raspberry Pi (樹莓派)**、家用小型伺服器，或任何雲端平台的免費版 VPS (如 Oracle Cloud, AWS 等)。
 
+## 💰 費用與託管 (Cost & Hosting)
+
+對於絕大多數的個人用途，**這整套系統可以完全免費運行**。
+
+- **Gemini API**：Google 提供了非常慷慨的免費額度（例如每月數百萬 tokens），遠超個人使用所需。
+- **Telegram API**：完全免費。
+- **在地化工具 (TDX/CWA)**：台灣政府開放資料，免費。
+- **主機 (Hosting)**：此橋接器消耗資源極低，您可以將它部署在：
+    - **自有硬體**：例如樹莓派 (Raspberry Pi)、一台舊筆電、或您的家用伺服器。
+    - **雲端免費方案**：各大雲端平台（如 Oracle Cloud、AWS、GCP）的「永久免費」方案主機。
+
+## 🔐 安全性考量 (Security Considerations)
+
+- **通訊加密**：本程式與 Google / Telegram API 之間的所有通訊，皆已透過標準的 HTTPS 加密。
+- **公共 Wi-Fi**：如果您將此程式部署在筆電上，並於不安全的網路（如：咖啡廳）運行，強烈建議您搭配 VPN 使用，以加密您電腦的所有流量。
+- **遠端存取 (進階)**：若您將橋接器部署在雲端 VPS，但希望它能呼叫家中電腦的工具，您需要一條安全的通道。與其將家中網路暴露於公網，我們更推薦使用 **[Tailscale](https://tailscale.com/)** 這類零信任網路方案。
+
+    **Tailscale 快速設定:**
+    ```bash
+    # macOS
+    brew install tailscale
+    sudo tailscale up
+
+    # Linux
+    curl -fsSL https://tailscale.com/install.sh | sh
+    sudo tailscale up
+    ```
+    這會建立一個安全的虛擬私人網路，讓您的雲端主機與家用設備可以像在同一個房間般安全地通訊。
+
 ## 🔑 帳號與金鑰需求
 
 要啟動此橋接器，您需要申請以下帳號與 API 金鑰：

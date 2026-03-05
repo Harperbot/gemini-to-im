@@ -56,6 +56,35 @@ This bridge is designed to be extremely lightweight and can run on almost any mo
   - **Python**: v3.9 or higher (required for local tools like parking/surf query).
 - **Hardware**: Can run on low-resource devices like a **Raspberry Pi**, a home server, or even a free-tier VPS (Oracle Cloud, AWS, etc.).
 
+## 💰 Cost & Hosting
+
+For most personal use cases, **this entire system can be run for free.**
+
+- **Gemini API**: Google provides a generous free tier (e.g., millions of tokens per month) which is more than enough for personal use.
+- **Telegram API**: Free.
+- **Localized Tools (TDX/CWA)**: Free public data APIs.
+- **Hosting**: The bridge is extremely lightweight. You can host it on:
+    - **Existing Hardware**: A Raspberry Pi, an old laptop, or your home server.
+    - **Cloud Free Tiers**: Services like Oracle Cloud's "Always Free" Ampere instances or AWS/GCP free tiers are perfect.
+
+## 🔐 Security Considerations
+
+- **Encrypted Communication**: All traffic between the bridge and the Google/Telegram APIs is secured via standard HTTPS.
+- **Public Wi-Fi**: If you run this bridge on a laptop in a public network (e.g., a coffee shop), it is **strongly recommended** to use a VPN to encrypt all your system traffic.
+- **Remote Access (Advanced)**: If you host the bridge on a cloud VPS but want it to trigger scripts on your home computer, you need a secure tunnel. Instead of exposing your home network, we recommend using a zero-trust network solution like **[Tailscale](https://tailscale.com/)**.
+
+    **Quick Tailscale Setup:**
+    ```bash
+    # On macOS
+    brew install tailscale
+    sudo tailscale up
+
+    # On Linux
+    curl -fsSL https://tailscale.com/install.sh | sh
+    sudo tailscale up
+    ```
+    This creates a secure virtual private network, allowing your cloud instance to safely communicate with your home devices as if they were in the same room.
+
 ## 🔑 Account Requirements
 
 To use this bridge, you will need the following accounts and API keys:
