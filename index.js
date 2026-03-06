@@ -3,7 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 
 // 初始化環境變數
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -233,8 +233,9 @@ bot.on('message', async (msg) => {
       }
       
       // 處理函數呼叫 (Tool Call)
-      if (chunk.functionCalls && chunk.functionCalls.length > 0) {
-        const call = chunk.functionCalls[0];
+      const functionCalls = chunk.functionCalls ? chunk.functionCalls() : [];
+      if (functionCalls.length > 0) {
+        const call = functionCalls[0];
         
         // 1. 需要授權的工具
         if (call.name === "run_shell_command") {
@@ -265,24 +266,24 @@ bot.on('message', async (msg) => {
         if (call.name === "find_parking" || call.name === "query_surf_spots") {
           await bot.editMessageText(fullText + `\n\n🔍 *正在查詢資料，請稍候...*`, { chat_id: chatId, message_id: replyMsg.message_id, parse_mode: "Markdown" });
           
-          let execCmd = "";
+          let execArgs = [];
           if (call.name === "find_parking") {
             const lat = call.args.lat;
             const lon = call.args.lon;
             const loc = call.args.location_name;
             if (lat && lon) {
-              execCmd = `python3 ./tools/taiwan/parking_query.py --lat ${lat} --lon ${lon}`;
+              execArgs = ["./tools/taiwan/parking_query.py", "--lat", String(lat), "--lon", String(lon)];
             } else if (loc) {
-               execCmd = `python3 ./tools/taiwan/parking_query.py --url "?q=${encodeURIComponent(loc)}"`;
+              execArgs = ["./tools/taiwan/parking_query.py", "--url", `?q=${encodeURIComponent(loc)}`];
             }
           } else if (call.name === "query_surf_spots") {
             const query = call.args.query || "all";
-            execCmd = `python3 ./tools/taiwan/surf_query.py --query "${query}"`;
+            execArgs = ["./tools/taiwan/surf_query.py", "--query", String(query)];
           }
 
           // 執行 Python 腳本
-          exec(execCmd, async (error, stdout, stderr) => {
-            const output = stdout || stderr || error.message;
+          execFile("python3", execArgs, async (error, stdout, stderr) => {
+            const output = stdout || stderr || (error ? error.message : "（無輸出）");
             try {
               let nextReplyMsg = await bot.sendMessage(chatId, "⏳ 分析查詢結果中...");
               let nextFullText = "";
@@ -338,7 +339,12 @@ bot.on('message', async (msg) => {
 bot.on('callback_query', async (callbackQuery) => {
   const message = callbackQuery.message;
   const chatId = message.chat.id;
-  const data = JSON.parse(callbackQuery.data);
+  let data;
+  try {
+    data = JSON.parse(callbackQuery.data);
+  } catch (e) {
+    return bot.answerCallbackQuery(callbackQuery.id, { text: "資料格式錯誤。" });
+  }
   const session = sessions.get(chatId);
 
   if (!session || !session.pendingFunctionCall) {
