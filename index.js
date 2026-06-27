@@ -2,8 +2,9 @@ require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
-const { execFile } = require('child_process');
+const { execFile, spawnSync } = require('child_process');
 
 // 初始化環境變數
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -15,8 +16,52 @@ if (!TELEGRAM_BOT_TOKEN || !GEMINI_API_KEY) {
   process.exit(1);
 }
 
+// zh-TW (Taiwan terminology) conversion per Harper-global rule
+// `~/.claude/rules/harper-zh-tw-taiwan-terminology.md`. Graceful fallthrough.
+// Critical for gemini-to-im: Gemini may produce Simplified Chinese output
+// that must be converted before reaching user (Taiwan-based admin).
+const TO_TW_BIN = path.join(os.homedir(), '.harper/bin/to_tw');
+
+// batch 6 P2 fast-path (R2 critic 2026-05-05) + R1 post-R3 F2 (CJK Ext A):
+// skip spawnSync if text has no Han script char. spawnSync ~30-50ms cold-start
+// per call; in gemini streaming chunks 90%+ pure-English/code/emoji, this
+// short-circuits without subprocess overhead. Use `\p{Script=Han}` Unicode
+// property escape to cover full Han range (CJK Unified + Ext A + Ext B + ...
+// Compatibility) — avoids rare-char silent skip that range [U+4E00-U+9FFF]
+// alone would miss (CJK Ext A U+3400-U+4DBF for historical/rare chars).
+const _CJK_RE = /\p{Script=Han}/u;
+
+function toTw(text) {
+  if (typeof text !== 'string' || !text) return text;
+  if (!_CJK_RE.test(text)) return text;  // fast-path: no CJK → 0 conversion needed
+  try {
+    const r = spawnSync(TO_TW_BIN, [], { input: text, encoding: 'utf8', timeout: 5000 });
+    if (r.status === 0 && typeof r.stdout === 'string' && r.stdout.length > 0) {
+      // R2 critic F1: central to_tw 已含 sed 's/臺/台/g'；defense-in-depth 再 replace。
+      const out = (text.endsWith('\n') ? r.stdout : r.stdout.replace(/\n$/, ''));
+      return out.replace(/臺/g, '台');
+    }
+  } catch (_) { /* graceful: never block bot dispatch on conversion failure */ }
+  return text;
+}
+
 // 初始化 Bot 與 Gemini API
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+
+// Monkey-patch outbound choke points so all sendMessage / editMessageText /
+// answerCallbackQuery flow through to_tw. Covers sendSmartMessage choke +
+// direct bot.sendMessage calls + 4 callback-button reply paths.
+const _origSendMessage = bot.sendMessage.bind(bot);
+bot.sendMessage = (chatId, text, opts) => _origSendMessage(chatId, toTw(text), opts);
+const _origEditMessageText = bot.editMessageText.bind(bot);
+bot.editMessageText = (text, opts) => _origEditMessageText(toTw(text), opts);
+const _origAnswerCallbackQuery = bot.answerCallbackQuery.bind(bot);
+bot.answerCallbackQuery = (queryId, opts) => {
+  if (opts && typeof opts.text === 'string') {
+    opts = { ...opts, text: toTw(opts.text) };
+  }
+  return _origAnswerCallbackQuery(queryId, opts);
+};
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 const SESSION_FILE = path.join(__dirname, 'sessions.json');
@@ -78,7 +123,7 @@ function loadSessions() {
     try {
       const data = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf8'));
       for (const [chatId, history] of Object.entries(data)) {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", tools: tools });
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest", tools: tools });
         const chat = model.startChat({ history: history });
         sessions.set(Number(chatId), { chat, isProcessing: false });
       }
@@ -199,7 +244,7 @@ bot.on('message', async (msg) => {
 
   // 初始化或獲取會話
   if (!sessions.has(chatId)) {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", tools: tools });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest", tools: tools });
     const chat = model.startChat({ history: [] });
     sessions.set(chatId, { chat, isProcessing: false });
   }
